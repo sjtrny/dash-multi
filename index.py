@@ -10,7 +10,7 @@ app = MultiPageApp(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
-layout_index = html.Div([
+nav_bar = html.Div([
     dcc.Link('Home', href='/'),
     html.Br(),
     dcc.Link('Navigate to App 1', href='/apps/app1'),
@@ -25,6 +25,8 @@ pages = {
 
 app.load_apps(pages)
 
+# TODO, routing and reverse like functionality
+
 routing_dict = {
     '/apps/app1': pages['app1'],
     '/apps/app2': pages['app2'],
@@ -37,7 +39,7 @@ def main_layout(pathname):
     if pathname in routing_dict:
         extras.extend(routing_dict[pathname].layout().children)
 
-    return html.Div(layout_index.children + extras)
+    return html.Div(nav_bar.children + extras)
 
 app.set_layout(main_layout)
 
