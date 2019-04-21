@@ -1,8 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from multipage import MultiPageApp
-from app1 import App1
-from app2 import App2
+from page1 import Page1
+from page2 import Page2
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -13,23 +13,21 @@ server = app.server
 nav_bar = html.Div([
     dcc.Link('Home', href='/'),
     html.Br(),
-    dcc.Link('Navigate to App 1', href='/apps/app1'),
+    dcc.Link('Navigate to App 1', href='/pages/page1'),
     html.Br(),
-    dcc.Link('Navigate to App 2', href='/apps/app2'),
+    dcc.Link('Navigate to App 2', href='/pages/page2'),
 ])
 
 pages = {
-    'app1': App1(),
-    'app2': App2(),
+    'page1': Page1(),
+    'page2': Page2(),
 }
 
 app.load_apps(pages)
 
-# TODO, routing and reverse like functionality
-
 routing_dict = {
-    '/apps/app1': pages['app1'],
-    '/apps/app2': pages['app2'],
+    '/pages/page1': pages['page1'],
+    '/pages/page2': pages['page2'],
 }
 
 def main_layout(pathname):
