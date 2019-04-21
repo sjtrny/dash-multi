@@ -2,7 +2,9 @@ from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 from pages import DashPage
+from multipage import wrap_callback
 
+@wrap_callback(Output('display-value', 'children'), [Input('dropdown', 'value')])
 def display_value(value):
     return 'You have selected "{}"'.format(value)
 
@@ -28,5 +30,5 @@ class App2(DashPage):
     def _callbacks(self):
 
         return [
-            {'func' : display_value, 'args': [Output('display-value', 'children'), [Input('dropdown', 'value')]] }
+            display_value
         ]

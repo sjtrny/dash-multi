@@ -3,6 +3,23 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 
+def wrap_callback(output, inputs=[], state=[]):
+
+    def wrapper(func):
+
+        func.output = output
+        func.inputs = inputs
+        func.states = state
+
+        def get_args():
+            return [func.output, func.inputs, func.states]
+
+        func.get_args = get_args
+
+        return func
+
+    return wrapper
+
 class MultiPageApp(dash.Dash):
 
     def load_apps(self, app_dict):
@@ -19,8 +36,9 @@ class MultiPageApp(dash.Dash):
                 if hasattr(child, 'id'):
                     child.id = f"{page_name}-{child.id}"
 
-            for cback_dict in page_callbacks:
-                for arg in cback_dict['args']:
+            for cback_func in page_callbacks:
+
+                for arg in cback_func.get_args():
                     if type(arg) is list:
                         for component in arg:
                             component.component_id = f"{page_name}-{component.component_id}"
@@ -44,5 +62,5 @@ class MultiPageApp(dash.Dash):
         self.layout = serve_layout
 
         for page_name, page_app in app_dict.items():
-            for cback_dict in page_app.callbacks:
-                self.callback(*cback_dict['args'])(cback_dict['func'])
+            for cback_func in page_app.callbacks:
+                self.callback(*cback_func.get_args())(cback_func)
