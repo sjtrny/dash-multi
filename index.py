@@ -1,6 +1,5 @@
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
 from multipage import MultiPageApp
 from app1 import App1
 from app2 import App2
@@ -31,16 +30,16 @@ routing_dict = {
     '/apps/app2': pages['app2'],
 }
 
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
+def main_layout(pathname):
 
     extras = []
 
     if pathname in routing_dict:
-        extras.extend(routing_dict[pathname].layout.children)
+        extras.extend(routing_dict[pathname].layout().children)
 
-    return html.Div( layout_index.children + extras)
+    return html.Div(layout_index.children + extras)
+
+app.set_layout(main_layout)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

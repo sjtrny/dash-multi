@@ -10,10 +10,7 @@ def display_value(value):
 
 class App2(DashPage):
 
-    def __init__(self):
-        super().__init__()
-
-    def _layout(self):
+    def layout(self):
         return html.Div([
             html.H3('App 2'),
             dcc.Dropdown(
@@ -27,7 +24,7 @@ class App2(DashPage):
             html.Div(id='display-value'),
         ])
 
-    def _callbacks(self):
+    def callbacks(self):
 
         return [
             display_value

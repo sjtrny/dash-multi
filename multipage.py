@@ -2,6 +2,7 @@ import flask
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
+from dash.dependencies import Input, Output
 
 def wrap_callback(output, inputs=[], state=[]):
 
@@ -22,19 +23,27 @@ def wrap_callback(output, inputs=[], state=[]):
 
 class MultiPageApp(dash.Dash):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.layout_list = []
+        self.callback_lists = []
+
+    def set_layout(self, layout_func):
+        self.callback(Output('page-content', 'children'), [Input('url', 'pathname')])(layout_func)
+
     def load_apps(self, app_dict):
 
         for page_name, page_app in app_dict.items():
 
-            page_layout = page_app.layout
-            page_callbacks = page_app.callbacks
-
-            # SHOULD PROBABLY STORE A COPY OF LAYOUT RATHER THAN MODIFYING
-            # THE LAYOUT OF THE OBJECT ¯\_(ツ)_/¯
+            page_layout = page_app.layout()
+            page_callbacks = page_app.callbacks()
 
             for child in page_layout.children:
                 if hasattr(child, 'id'):
                     child.id = f"{page_name}-{child.id}"
+
+            self.layout_list.append(page_layout)
 
             for cback_func in page_callbacks:
 
@@ -44,6 +53,8 @@ class MultiPageApp(dash.Dash):
                             component.component_id = f"{page_name}-{component.component_id}"
                     else:
                         arg.component_id = f"{page_name}-{arg.component_id}"
+
+            self.callback_lists.append(page_callbacks)
 
         url_bar_and_content_div = html.Div([
             dcc.Location(id='url', refresh=False),
@@ -57,10 +68,10 @@ class MultiPageApp(dash.Dash):
                 return html.Div([url_bar_and_content_div])
 
             # TRICK LAYOUT VALIDATION
-            return html.Div([url_bar_and_content_div] + [page_app.layout for page_name, page_app in app_dict.items()])
+            return html.Div([url_bar_and_content_div] + self.layout_list)
 
         self.layout = serve_layout
 
-        for page_name, page_app in app_dict.items():
-            for cback_func in page_app.callbacks:
+        for callback_list in self.callback_lists:
+            for cback_func in callback_list:
                 self.callback(*cback_func.get_args())(cback_func)
