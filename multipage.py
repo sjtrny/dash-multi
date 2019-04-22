@@ -23,17 +23,17 @@ class Page():
 
         # Namespace layout
         if hasattr(page, 'layout'):
-            page_layout = page.layout
 
-            # This only skims the surface, we need to parse the full layout tree
-            # Could be a problem if the layout is a func rather than component
-            # as the layout can change and we would need to reparse every god
-            # damn time
-            for child in page_layout.children:
-                if hasattr(child, 'id'):
-                    child.id = f"{namespace}-{child.id}"
+            def parse_layout(child):
+                if hasattr(child, 'children') and isinstance(child.children, list):
+                    for sub_child in child.children:
+                        parse_layout(sub_child)
+                elif hasattr(child, 'id'):
+                        child.id = f"{namespace}-{child.id}"
 
-            page.layout = page_layout
+                return child
+
+            page.layout = parse_layout(page.layout)
 
         # Namespace callbacks
         if hasattr(page, 'callbacks'):

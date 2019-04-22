@@ -14,14 +14,18 @@ class Page1(Page):
 
         self.layout = html.Div(header.children + [
             html.H3('App 1'),
-            dcc.Dropdown(
-                id='dropdown',
-                options=[
-                    {'label': 'App 1 - {}'.format(i), 'value': i} for i in [
-                        'NYC', 'MTL', 'LA'
+
+            html.Div([
+                dcc.Dropdown(
+                    id='dropdown',
+                    options=[
+                        {'label': 'App 1 - {}'.format(i), 'value': i} for i in [
+                            'NYC', 'MTL', 'LA'
+                        ]
                     ]
-                ]
-            ),
+                )
+            ])
+            ,
             html.Div(id='display-value'),
         ])
 
