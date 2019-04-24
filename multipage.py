@@ -3,92 +3,93 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
+import types
+import functools
 
-class Section():
-
-    @classmethod
-    def as_app(cls, *args, **kwargs):
-
-        app = MultiPageApp(*args, **kwargs)
-        app.root(cls)
-
-        return app
+def copy_func(f):
+    # https://stackoverflow.com/a/13503277
+    g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,
+                           argdefs=f.__defaults__,
+                           closure=f.__closure__)
+    g = functools.update_wrapper(g, f)
+    g.__kwdefaults__ = f.__kwdefaults__
+    return g
 
 class Page():
 
-    @classmethod
-    def namespaced(cls, namespace):
+    def __init__(self):
+        self.layout = None
+        self.callbacks = []
 
-        page = cls()
+    def callback(self, output, inputs=[], state=[]):
+
+        def wrapper(func):
+            func = copy_func(func)
+
+            func.output = output
+            func.inputs = inputs
+            func.states = state
+
+            def get_args():
+                return [func.output, func.inputs, func.states]
+
+            func.get_args = get_args
+
+            self.callbacks.append(func)
+
+            return func
+
+        return wrapper
+
+    def namespace(self, namespace):
 
         # Namespace layout
-        if hasattr(page, 'layout'):
+        if hasattr(self, 'layout'):
 
             def parse_layout(child):
                 if hasattr(child, 'children') and isinstance(child.children, list):
                     for sub_child in child.children:
                         parse_layout(sub_child)
                 elif hasattr(child, 'id'):
-                        child.id = f"{namespace}-{child.id}"
+                        child.id = f"{namespace}:{child.id}"
 
                 return child
 
-            page.layout = parse_layout(page.layout)
+            self.layout = parse_layout(self.layout)
 
         # Namespace callbacks
-        if hasattr(page, 'callbacks'):
-            page_callbacks = page.callbacks
+        if hasattr(self, 'callbacks'):
+            page_callbacks = self.callbacks
 
             for cback_func in page_callbacks:
 
                 for arg in cback_func.get_args():
                     if type(arg) is list:
                         for component in arg:
-                            component.component_id = f"{namespace}-{component.component_id}"
+                            component.component_id = f"{namespace}:{component.component_id}"
                     else:
-                        arg.component_id = f"{namespace}-{arg.component_id}"
+                        arg.component_id = f"{namespace}:{arg.component_id}"
 
-            page.callbacks = page_callbacks
+            self.callbacks = page_callbacks
 
-        return page
+        return self
 
-    @classmethod
-    def as_app(cls, *args, **kwargs):
+    def as_app(self, *args, **kwargs):
 
-        class TempSection(Section):
-
-            def __init__(self):
-                self.routes = routes = [
-                    Route('/', cls),
-                ]
+        routes = [
+            Route('/', self),
+        ]
 
         app = MultiPageApp(*args, **kwargs)
-        app.root(TempSection)
+        app.root(routes)
 
         return app
 
 class Route:
 
-    def __init__(self, path, section_cls):
+    def __init__(self, path, handler):
         self.path = path
-        self.handler_cls = section_cls
-
-def wrap_callback(output, inputs=[], state=[]):
-
-    def wrapper(func):
-
-        func.output = output
-        func.inputs = inputs
-        func.states = state
-
-        def get_args():
-            return [func.output, func.inputs, func.states]
-
-        func.get_args = get_args
-
-        return func
-
-    return wrapper
+        self.handler = handler
 
 class MultiPageApp(dash.Dash):
 
@@ -101,6 +102,7 @@ class MultiPageApp(dash.Dash):
 
     def _route(self, pathname):
 
+
         if pathname in self.routing_dict:
             page = self.routing_dict[pathname]
         elif pathname is None:
@@ -111,56 +113,48 @@ class MultiPageApp(dash.Dash):
         return page.layout
 
     # RECURSIVE
-    def parse_routes(self, handler):
+    def parse_routes(self, handler, cur_path = None):
+
+        cur_path = cur_path if cur_path else ''
 
         routing_dict = {}
         layout_list = []
         callback_list = []
 
-        for sub_route in handler.routes:
+        if isinstance(handler, list):
 
-            if issubclass(sub_route.handler_cls, Section):
-                handler = sub_route.handler_cls()
+            route_list = handler
 
-                sub_routing_dict, sub_layout_list, sub_callback_list = self.parse_routes(handler)
+            for sub_route in route_list:
 
-                spaced_sub_routing_dict = {}
-                # Prefix the routing dict
-                for k, v in sub_routing_dict.items():
-                    spaced_sub_routing_dict[f"{sub_route.path}{k}"] = v
+                sub_routing_dict, sub_layout_list, sub_callback_list = self.parse_routes(sub_route.handler, f"{cur_path}{sub_route.path}")
 
-                routing_dict.update(spaced_sub_routing_dict)
-                layout_list.append(sub_layout_list)
+                routing_dict.update(sub_routing_dict)
+                layout_list.extend(sub_layout_list)
                 callback_list.extend(sub_callback_list)
 
-            elif issubclass(sub_route.handler_cls, Page):
-                handler = sub_route.handler_cls.namespaced(sub_route.path)
+        elif isinstance(handler, Page):
 
-                routing_dict[sub_route.path] = handler
+            page = handler.namespace(cur_path)
 
-                if hasattr(handler, 'layout'):
-                    layout_list.append(handler.layout)
-                else:
-                    raise Exception("Page must have a layout")
-
-                if hasattr(handler, 'callbacks') and handler.callbacks:
-                    callback_list.extend(handler.callbacks)
-            else:
-                raise Exception("Handler invalid")
+            routing_dict[cur_path] = page
+            layout_list.append(page.layout)
+            if hasattr(page, 'callbacks') and page.callbacks:
+                callback_list.extend(page.callbacks)
+        else:
+            raise Exception("Handler Class invalid")
 
         return routing_dict, layout_list, callback_list
 
-    def root(self, routes):
+    def set_routes(self, routes_list):
 
-        section = routes()
-
-        routing_dict, layout_list, callback_list = self.parse_routes(section)
+        routing_dict, layout_list, callback_list = self.parse_routes(routes_list)
 
         self.routing_dict.update(routing_dict)
         self.layout_lists.extend(layout_list)
 
         if callback_list:
-            self.callback_lists.append(callback_list)
+            self.callback_lists.extend(callback_list)
 
         url_bar_and_content_div = html.Div([
             dcc.Location(id='url', refresh=False),
@@ -184,9 +178,8 @@ class MultiPageApp(dash.Dash):
         self.callback(Output('page-content', 'children'), [Input('url', 'pathname')])(self._route)
 
         # Register all callbacks
-        for callback_list in self.callback_lists:
-            for cback_func in callback_list:
-                self.callback(*cback_func.get_args())(cback_func)
+        for cback_func in self.callback_lists:
+            self.callback(*cback_func.get_args())(cback_func)
 
 
 
