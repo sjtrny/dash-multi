@@ -1,4 +1,4 @@
-# Dash Multi Page/Apps Example
+# Dash MultiPage
 
 Wrapper on top of Dash to support multi page apps.
 
