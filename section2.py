@@ -2,16 +2,23 @@ import dash_core_components as dcc
 import dash_html_components as html
 from multipage import Route, Page
 from page1 import Page1
-from header import header
+from header import header as site_header
+
+section_header = html.Div([
+            html.Br(),
+            dcc.Link('Section Home', href='./'),
+            html.Br(),
+            dcc.Link('Navigate to Demo', href='./demo'),
+        ])
 
 section_index = Page()
-section_index.layout = html.Div(header.children + [
+section_index.layout = html.Div(site_header.children + section_header.children + [
             html.H1("Section 2 Index"),
-            dcc.Link('Navigate to App 1', href='./demo'),
+
         ])
 
 demo = Page()
-demo.layout = html.Div(header.children + [
+demo.layout = html.Div(site_header.children + section_header.children + [
             html.H1("Demo"),
         ])
 
