@@ -1,6 +1,6 @@
 # Dash Multi Page/Apps Example
 
-An example project on how to configure multiple pages with Dash.
+Wrapper on top of Dash to support multi page apps.
 
 ### Running Examples
 

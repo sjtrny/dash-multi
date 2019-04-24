@@ -25,7 +25,7 @@ def my_callback(n_intervals):
 
 # Configure routing
 routes = [
-    Route('/', index_page),             # Locally defined page
+    Route('', index_page),              # Locally defined page
     Route('/page1', Page1()),           # Seperately defined page
     Route('/page2', section2_routes),   # Section containing pages and further sections
 ]
