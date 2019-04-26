@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "dash-multipage"
+project = "dash-multi"
 copyright = "2019, Stephen Tierney"
 author = "Stephen Tierney"
 

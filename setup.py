@@ -15,12 +15,12 @@ with open(
 # Fields marked as "Optional" may be commented out.
 
 setup(
-    name="dash-multipage",
+    name="dash-multi",
     version="0.1",
     description="a dash extension for multipage apps",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/sjtrny/dash-multipage",
+    url="https://github.com/sjtrny/dash-multi",
     author="Stephen Tierney",
     author_email="sjtrny@gmail.com",
     keywords="dash plotly multipage multi page",
