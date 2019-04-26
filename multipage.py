@@ -168,7 +168,11 @@ class MultiPageApp(dash.Dash):
 
             for sub_route in route_list:
 
-                sub_routing_dict, sub_layout_list, sub_callback_list = MultiPageApp.parse_routes(
+                (
+                    sub_routing_dict,
+                    sub_layout_list,
+                    sub_callback_list,
+                ) = MultiPageApp.parse_routes(
                     sub_route.handler, f"{cur_path}{sub_route.path}"
                 )
 
