@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/sjtrny/dash-multi.svg?branch=master)](https://travis-ci.org/sjtrny/dash-multi)
+[![Documentation Status](https://readthedocs.org/projects/dash-multi/badge/?version=latest)](https://dash-multi.readthedocs.io/en/latest/?badge=latest)
+[![Downloads](https://pepy.tech/badge/jitcache)](https://pepy.tech/project/dash-multi)
+
 # Dash Multi(Page)
 
 Wrapper on top of Dash to support multi page apps.
