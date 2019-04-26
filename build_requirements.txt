@@ -1,0 +1,6 @@
+black
+dash
+flake8
+pytest
+Sphinx
+twine

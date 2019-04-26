@@ -1,4 +1,4 @@
-from page1 import Page1
+from page import Page1
 from multipage import MultiPageApp
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']

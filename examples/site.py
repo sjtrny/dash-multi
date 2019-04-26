@@ -1,6 +1,6 @@
 from multipage import MultiPageApp, Route, Page
-from page1 import Page1
-from section2 import section2_routes
+from page import Page1
+from section import section_routes
 import dash_core_components as dcc
 import dash_html_components as html
 from header import header
@@ -27,7 +27,7 @@ def my_callback(n_intervals):
 routes = [
     Route('', index_page),              # Locally defined page
     Route('/page1', Page1()),           # Seperately defined page
-    Route('/page2', section2_routes),   # Section containing pages and further sections
+    Route('/page2', section_routes),   # Section containing pages and further sections
 ]
 
 app.set_routes(routes)

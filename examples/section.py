@@ -1,7 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from multipage import Route, Page
-from page1 import Page1
+from page import Page1
 from header import header as site_header
 
 section_header = html.Div([
@@ -22,7 +22,7 @@ demo.layout = html.Div(site_header.children + section_header.children + [
             html.H1("Demo"),
         ])
 
-section2_routes = [
+section_routes = [
             # This seems like a potential bug in dash, we should be able to
             # use '' here, however it breaks the ./demo relative linking!
             Route('/', section_index),
