@@ -144,7 +144,7 @@ class MultiPageApp(dash.Dash):
         else:
             raise Exception(f"PATHNAME {pathname} does not exist in routes.")
 
-        return page.layout
+        return page.layout() if callable(page.layout) else page.layout
 
     @staticmethod
     def parse_routes(handler, cur_path=None):
@@ -168,11 +168,7 @@ class MultiPageApp(dash.Dash):
 
             for sub_route in route_list:
 
-                (
-                    sub_routing_dict,
-                    sub_layout_list,
-                    sub_callback_list,
-                ) = MultiPageApp.parse_routes(
+                sub_routing_dict, sub_layout_list, sub_callback_list = MultiPageApp.parse_routes(
                     sub_route.handler, f"{cur_path}{sub_route.path}"
                 )
 
@@ -185,7 +181,8 @@ class MultiPageApp(dash.Dash):
             page = handler.namespace(cur_path)
 
             routing_dict[cur_path] = page
-            layout_list.append(page.layout)
+            layout_list.append(page.layout() if callable(page.layout) else page.layout)
+
             if hasattr(page, "callbacks") and page.callbacks:
                 callback_list.extend(page.callbacks)
         else:
