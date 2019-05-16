@@ -181,7 +181,9 @@ class MultiPageApp(dash.Dash):
             page = handler.namespace(cur_path)
 
             routing_dict[cur_path] = page
-            layout_list.append(page.layout() if callable(page.layout) else page.layout)
+            layout_list.append(
+                page.layout() if callable(page.layout) else page.layout
+            )
 
             if hasattr(page, "callbacks") and page.callbacks:
                 callback_list.extend(page.callbacks)
