@@ -1,34 +1,47 @@
-import dash_core_components as dcc
+import dash
 import dash_html_components as html
-from multipage import Route, Page
+from multipage import Route, MultiPageApp
 from page import Page1
-from header import header as site_header
 
 section_header = html.Div(
     [
         html.Br(),
-        dcc.Link("Section Home", href="./"),
+        html.A("Section Home", href="./"),
         html.Br(),
-        dcc.Link("Navigate to Demo", href="./demo"),
+        html.A("Navigate to Demo", href="./demo"),
     ]
 )
 
-section_index = Page()
-section_index.layout = html.Div(
-    site_header.children
-    + section_header.children
-    + [html.H1("Section 2 Index")]
-)
 
-demo = Page()
-demo.layout = html.Div(
-    site_header.children + section_header.children + [html.H1("Demo")]
-)
+class Index(dash.Dash):
+    def __init__(self, name, server, url_base_pathname):
 
-section_routes = [
-    # This seems like a potential bug in dash, we should be able to
-    # use '' here, however it breaks the ./demo relative linking!
-    Route("/", section_index),
-    Route("/demo", demo),
-    Route("/page1", Page1()),
-]
+        # Must initialise the parent class
+        super().__init__(
+            name=name, server=server, url_base_pathname=url_base_pathname
+        )
+
+        self.layout = html.Div(
+            section_header.children + [html.H1("Section 2 Index")]
+        )
+
+
+class Demo(dash.Dash):
+    def __init__(self, name, server, url_base_pathname):
+
+        # Must initialise the parent class
+        super().__init__(
+            name=name, server=server, url_base_pathname=url_base_pathname
+        )
+
+        self.layout = html.Div(section_header.children + [html.H1("Demo")])
+
+
+class Section(MultiPageApp):
+    def get_routes(self):
+
+        return [
+            Route(Index, "index", "/"),
+            Route(Demo, "demo", "/demo/"),
+            Route(Page1, "page1", "/page1/"),
+        ]

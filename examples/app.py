@@ -1,48 +1,24 @@
-from multipage import MultiPageApp, Route, Page
-from page import Page1
-from section import section_routes
-import dash_core_components as dcc
+from flask import Flask
+import dash
 import dash_html_components as html
-from header import header
-from dash.dependencies import Input, Output
+from section import Section
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-
-app = MultiPageApp(__name__, external_stylesheets=external_stylesheets)
-
-# Create a new page
-index_page = Page()
-
-index_page.layout = html.Div(
-    header.children
-    + [
-        html.H3("Home"),
-        dcc.Interval(
-            id="interval-component", interval=1 * 1000, n_intervals=0
-        ),
-        html.Div(id="display-value"),
-    ]
-)
+server = Flask(__name__)
 
 
-@index_page.callback(
-    Output("display-value", "children"),
-    [Input("interval-component", "n_intervals")],
-)
-def my_callback(n_intervals):
-    return f"Seconds since load: {n_intervals}."
+class IndexApp(dash.Dash):
+    def __init__(self, name, server, url_base_pathname):
+
+        # Must initialise the parent class
+        super().__init__(
+            name=name, server=server, url_base_pathname=url_base_pathname
+        )
+
+        self.layout = html.Div([html.H1("HOME INDEX")])
 
 
-# Configure routing
-routes = [
-    Route("", index_page),  # Locally defined page
-    Route("/page1", Page1()),  # Seperately defined page
-    Route(
-        "/page2", section_routes
-    ),  # Section containing pages and further sections
-]
-
-app.set_routes(routes)
+index_app = IndexApp(name="home", server=server, url_base_pathname="/")
+section_app = Section(name="section", server=server, url_base_pathname="/app1")
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    server.run(host="0.0.0.0")

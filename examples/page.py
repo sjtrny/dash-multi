@@ -1,7 +1,7 @@
+import dash
 from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
-from multipage import Page
 from header import header
 
 
@@ -9,11 +9,13 @@ def update_output_div(input_value):
     return 'You\'ve entered "{}"'.format(input_value)
 
 
-class Page1(Page):
-    def __init__(self, *args, **kwargs):
+class Page1(dash.Dash):
+    def __init__(self, name, server, url_base_pathname):
 
         # Must initialise the parent class
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            name=name, server=server, url_base_pathname=url_base_pathname
+        )
 
         self.layout = html.Div(
             header.children

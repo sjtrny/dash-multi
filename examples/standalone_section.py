@@ -1,11 +1,9 @@
-from multipage import MultiPageApp
-from section import section_routes
+from flask import Flask
+from section import Section
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+server = Flask(__name__)
 
-app = MultiPageApp(__name__, external_stylesheets=external_stylesheets)
-
-app.set_routes(section_routes)
+app = Section(name="home", server=server, url_base_pathname="/")
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    server.run(host="0.0.0.0")
