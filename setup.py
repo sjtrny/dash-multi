@@ -16,7 +16,7 @@ with open(
 
 setup(
     name="dash-multi",
-    version="0.2",
+    version="0.3",
     description="a dash extension for multipage apps",
     long_description=long_description,
     long_description_content_type="text/markdown",
