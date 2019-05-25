@@ -50,7 +50,7 @@ class Page1(Page):
             return 'You have selected "{}"'.format(value)
 
         # CALLBACK STYLE 2
-        # The callback could alternatively be define witin the __init__ scope
+        # The callback could alternatively be defined using
         self.callback(
             Output(component_id="my-div", component_property="children"),
             [Input(component_id="my-id", component_property="value")],

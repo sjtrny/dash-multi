@@ -5,6 +5,7 @@ import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import types
 import functools
+import copy
 
 
 def copy_func(func):
@@ -65,47 +66,43 @@ class Page:
 
         return wrapper
 
-    def namespace(self, namespace):
-        """
-        Namespaces layout elements and callbacks
 
-        :param namespace: a string of the namespace
-        """
+def namespace_layout(layout, namespace):
+    """
+    Namespaces layout elements and callbacks
 
-        # Namespace layout
-        if hasattr(self, "layout"):
+    :param namespace: a string of the namespace
+    """
 
-            def parse_layout(child):
-                if hasattr(child, "children") and isinstance(
-                    child.children, list
-                ):
-                    for sub_child in child.children:
-                        parse_layout(sub_child)
-                elif hasattr(child, "id"):
-                    child.id = f"{namespace}:{child.id}"
+    def parse_layout(child):
+        if hasattr(child, "children") and isinstance(
+                child.children, list
+        ):
+            for sub_child in child.children:
+                parse_layout(sub_child)
+        elif hasattr(child, "id"):
+            child.id = f"{namespace}:{child.id}"
 
-                return child
+        return child
 
-            self.layout = parse_layout(self.layout)
+    return parse_layout(layout)
 
-        # Namespace callbacks
-        if hasattr(self, "callbacks"):
-            page_callbacks = self.callbacks
 
-            for cback_func in page_callbacks:
+def namespace_callbacks(callbacks, namespace):
+    for cback_func in callbacks:
 
-                for arg in cback_func.get_args():
-                    if type(arg) is list:
-                        for component in arg:
-                            component.component_id = (
-                                f"{namespace}:{component.component_id}"
-                            )
-                    else:
-                        arg.component_id = f"{namespace}:{arg.component_id}"
+        for arg in cback_func.get_args():
+            if type(arg) is list:
+                for component in arg:
+                    if component.component_id != "url":
+                        component.component_id = (
+                            f"{namespace}:{component.component_id}"
+                        )
+            else:
+                if arg.component_id != "url":
+                    arg.component_id = f"{namespace}:{arg.component_id}"
 
-            self.callbacks = page_callbacks
-
-        return self
+    return callbacks
 
 
 class Route:
@@ -116,6 +113,9 @@ class Route:
     def __init__(self, path, handler):
         self.path = path
         self.handler = handler
+
+
+from dash.exceptions import PreventUpdate
 
 
 class MultiPageApp(dash.Dash):
@@ -137,14 +137,19 @@ class MultiPageApp(dash.Dash):
         :param pathname:
         :return:
         """
+        if pathname is None:
+            raise PreventUpdate
+
         if pathname in self.routing_dict:
             page = self.routing_dict[pathname]
-        elif pathname == "/" or pathname is None:
+        elif pathname == "/":
             page = self.routing_dict[""]
         else:
             raise Exception(f"PATHNAME {pathname} does not exist in routes.")
 
-        return page.layout() if callable(page.layout) else page.layout
+        current_layout = page.layout() if callable(page.layout) else page.layout
+
+        return namespace_layout(copy.deepcopy(current_layout), pathname)
 
     @staticmethod
     def parse_routes(handler, cur_path=None):
@@ -167,12 +172,7 @@ class MultiPageApp(dash.Dash):
             route_list = handler
 
             for sub_route in route_list:
-
-                (
-                    sub_routing_dict,
-                    sub_layout_list,
-                    sub_callback_list,
-                ) = MultiPageApp.parse_routes(
+                sub_routing_dict, sub_layout_list, sub_callback_list = MultiPageApp.parse_routes(
                     sub_route.handler, f"{cur_path}{sub_route.path}"
                 )
 
@@ -182,15 +182,25 @@ class MultiPageApp(dash.Dash):
 
         elif isinstance(handler, Page):
 
-            page = handler.namespace(cur_path)
+            page = handler
+
+            # Only static/semi-static layouts can have callbacks
+            # We do namespacing to layout_funcs when we serve the content
+            if not callable(handler.layout):
+                # Check that this does not change the page's internal layout
+                # Otherwise we might have to do a copy operation here
+
+                layout_list.append(namespace_layout(copy.deepcopy(page.layout), cur_path))
+
+                # Namespace callbacks
+                if hasattr(page, "callbacks") and page.callbacks:
+                    callback_list.extend(namespace_callbacks(page.callbacks, cur_path))
+            else:
+                if hasattr(page, "callbacks") and page.callbacks:
+                    raise Exception("You can't have callbacks with a layout func!")
 
             routing_dict[cur_path] = page
-            layout_list.append(
-                page.layout() if callable(page.layout) else page.layout
-            )
 
-            if hasattr(page, "callbacks") and page.callbacks:
-                callback_list.extend(page.callbacks)
         else:
             raise Exception("Handler Class invalid")
 
@@ -223,7 +233,6 @@ class MultiPageApp(dash.Dash):
             # or layout validation
             if flask.has_request_context():
                 # ACTUAL REQUEST, RETURN ROOT OF PAGE CONTENT
-
                 return html.Div([url_bar_and_content_div])
 
             # TRICK LAYOUT VALIDATION
