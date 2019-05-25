@@ -3,8 +3,6 @@ import dash
 import dash_html_components as html
 from section import Section
 
-server = Flask(__name__)
-
 
 class IndexApp(dash.Dash):
     def __init__(self, name, server, url_base_pathname):
@@ -16,6 +14,8 @@ class IndexApp(dash.Dash):
 
         self.layout = html.Div([html.H1("HOME INDEX")])
 
+
+server = Flask(__name__)
 
 index_app = IndexApp(name="home", server=server, url_base_pathname="/")
 section_app = Section(name="section", server=server, url_base_pathname="/app1")
